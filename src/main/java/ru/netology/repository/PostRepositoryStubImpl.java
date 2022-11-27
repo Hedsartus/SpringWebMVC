@@ -27,7 +27,7 @@ public class PostRepositoryStubImpl implements PostRepository {
         if (this.posts.containsKey(id) && !this.posts.get(id).isRemoved()) {
             return Optional.ofNullable(this.posts.get(id));
         } else {
-            throw new NotFoundException();
+            throw new NotFoundException("Сan't find post with id = {"+id+"}. Maybe the post has been deleted!");
         }
     }
 
@@ -52,6 +52,8 @@ public class PostRepositoryStubImpl implements PostRepository {
         if (posts.containsKey(id)) {
             Post post = posts.get(id);
             post.setRemoved(true);
+        } else {
+            throw new NotFoundException("Сan't find post with id = {"+id+"}");
         }
     }
 }
