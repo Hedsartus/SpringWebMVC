@@ -1,11 +1,13 @@
 package ru.netology.repository;
 
 import org.springframework.stereotype.Repository;
+import ru.netology.exception.NotFoundException;
 import ru.netology.model.Post;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Repository
 public class PostRepositoryStubImpl implements PostRepository {
@@ -18,18 +20,25 @@ public class PostRepositoryStubImpl implements PostRepository {
     }
 
     public List<Post> all() {
-        return new ArrayList<>(this.posts.values());
+        return this.posts.values().stream().filter((p) -> !p.isRemoved()).collect(Collectors.toList());
     }
 
     public Optional<Post> getById(long id) {
-        return Optional.ofNullable(this.posts.get(id));
+        if (this.posts.containsKey(id) && !this.posts.get(id).isRemoved()) {
+            return Optional.ofNullable(this.posts.get(id));
+        } else {
+            throw new NotFoundException();
+        }
     }
 
     public Post save(Post post) {
-
         var id = post.getId();
         if (id > 0 && this.posts.containsKey(id)) {
-            this.posts.replace(id, post);
+            if (!this.posts.get(id).isRemoved()) {
+                this.posts.replace(id, post);
+            } else {
+                throw new NotFoundException();
+            }
         } else {
             var newIdPost = this.postId.incrementAndGet();
             post.setId(newIdPost);
@@ -41,7 +50,8 @@ public class PostRepositoryStubImpl implements PostRepository {
 
     public void removeById(long id) {
         if (posts.containsKey(id)) {
-            this.posts.remove(id);
+            Post post = posts.get(id);
+            post.setRemoved(true);
         }
     }
 }
